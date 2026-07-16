@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validación de Certificado - Europe Certifications</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blue-dark: #002b7f;
+            --blue-bright: #0044cc;
+            --gold: #d4af37;
+            --text-dark: #1a202c;
+            --text-muted: #4a5568;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #e2e8f0;
+            margin: 0;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Envoltorio Responsive */
+        .cert-wrapper {
+            width: 100%;
+            max-width: 900px; /* Ancho real del certificado */
+            position: relative;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            transform-origin: top center;
+        }
+
+        /* El Certificado Físico (Tamaño fijo, se escalará con JS) */
+        .certificate {
+            width: 900px;
+            height: 650px;
+            background-color: #ffffff;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        /* Sombras grises diagonales de fondo */
+        .bg-shape-1 {
+            position: absolute;
+            bottom: -20%; right: -10%;
+            width: 70%; height: 70%;
+            background-color: #f7fafc;
+            transform: rotate(-35deg);
+            z-index: 1;
+        }
+        .bg-shape-2 {
+            position: absolute;
+            bottom: -30%; right: -20%;
+            width: 70%; height: 70%;
+            background-color: #edf2f7;
+            transform: rotate(-35deg);
+            z-index: 0;
+        }
+
+        /* Formas de la esquina superior izquierda */
+        .shape-gold-wide {
+            position: absolute;
+            top: 0; left: 0;
+            width: 55%; height: 100%;
+            background-color: var(--gold);
+            clip-path: polygon(0 0, 100% 0, 0 100%);
+            z-index: 2;
+        }
+        .shape-blue-dark {
+            position: absolute;
+            top: 0; left: 0;
+            width: 50%; height: 100%;
+            background-color: var(--blue-dark);
+            clip-path: polygon(0 0, 100% 0, 0 95%);
+            z-index: 3;
+        }
+        .shape-blue-light {
+            position: absolute;
+            top: 0; left: 0;
+            width: 40%; height: 100%;
+            background-color: var(--blue-bright);
+            clip-path: polygon(0 0, 100% 0, 0 75%);
+            z-index: 4;
+            opacity: 0.9;
+        }
+        .shape-blue-accent {
+            position: absolute;
+            top: 0; left: 0;
+            width: 30%; height: 100%;
+            background-color: #001a57;
+            clip-path: polygon(0 0, 100% 0, 0 60%);
+            z-index: 5;
+        }
+
+        /* Logo Falso (Simulando el de la imagen) */
+        .cert-logo {
+            position: absolute;
+            top: 60px;
+            left: 60px;
+            width: 180px;
+            height: 180px;
+            z-index: 10;
+            object-fit: contain;
+        }
+
+        /* Contenido del Certificado */
+        .cert-content {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 20;
+            padding: 70px 60px 60px 400px; /* Margen izquierdo grande para evitar el triángulo */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .title {
+            color: var(--blue-dark);
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin: 0 0 10px 0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .subtitle {
+            color: var(--blue-dark);
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: 4px;
+            margin: 0 0 15px 0;
+        }
+
+        .apellidos {
+            color: var(--blue-dark);
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .nombres {
+            color: var(--blue-dark);
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 600;
+            margin: 5px 0 40px 0;
+        }
+
+        .curso {
+            color: var(--blue-dark);
+            font-size: 1.4rem;
+            font-weight: 800;
+            line-height: 1.4;
+            text-transform: uppercase;
+            max-width: 90%;
+            margin-bottom: 40px;
+        }
+
+        .meta {
+            font-size: 1rem;
+            color: var(--text-dark);
+            line-height: 1.8;
+            margin-top: auto;
+            margin-bottom: 30px;
+        }
+        .meta p {
+            margin: 5px 0;
+        }
+        .meta strong {
+            font-weight: 700;
+        }
+
+        /* Tarjeta de Estado Flotante (Debajo del certificado) */
+        .status-card {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.05);
+            display: none; /* Se activa con JS */
+            margin-top: 1rem;
+        }
+        .status-card.valid {
+            display: block;
+            border-left: 6px solid #10b981;
+            background-color: #ecfdf5;
+        }
+        .status-card.invalid {
+            display: block;
+            border-left: 6px solid #ef4444;
+            background-color: #fef2f2;
+        }
+        
+        /* Capa de Error visual sobre el certificado */
+        .error-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            display: none;
+        }
+        .error-overlay h1 {
+            color: #ef4444;
+            font-size: 4rem;
+            border: 8px solid #ef4444;
+            padding: 1rem 2rem;
+            transform: rotate(-15deg);
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Contenedor del Certificado (Se escala automáticamente) -->
+    <div class="cert-wrapper" id="certWrapper">
+        <div class="certificate" id="certificate">
+            <!-- Formas de Fondo -->
+            <div class="bg-shape-2"></div>
+            <div class="bg-shape-1"></div>
+            
+            <div class="shape-gold-wide"></div>
+            <div class="shape-blue-dark"></div>
+            <div class="shape-blue-light"></div>
+            <div class="shape-blue-accent"></div>
+            
+            <img class="cert-logo" src="logo.png" alt="Europe Certifications Logo">
+
+            <div class="cert-content">
+                <h1 class="title">CERTIFICADO</h1>
+                <p class="subtitle">OTORGADO A:</p>
+                <div class="apellidos" id="val-apellidos">-------------</div>
+                <div class="nombres" id="val-nombres">-------------</div>
+
+                <div class="curso" id="val-curso">------------------------------------</div>
+
+                <div class="meta">
+                    <p>Con una duración de <strong id="val-duracion">--- horas académicas</strong>.</p>
+                    <p>Emitido en <span id="val-lugar">---</span>, el <span id="val-fecha">---</span></p>
+                    <p>Código de certificado: <strong id="val-codigo">---</strong></p>
+                </div>
+            </div>
+
+            <div class="error-overlay" id="errorOverlay">
+                <h1>INVÁLIDO</h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de Estado Real -->
+    <div class="status-card" id="statusCard">
+        <!-- Contenido dinámico -->
+    </div>
+
+    <script>
+        // 1. Escalar el certificado para que quepa en móviles sin romperse
+        function resizeCert() {
+            const wrapper = document.getElementById('certWrapper');
+            const cert = document.getElementById('certificate');
+            const targetWidth = 900;
+            const targetHeight = 650;
+            
+            // Si la pantalla es más pequeña que el certificado, lo achicamos con scale()
+            const containerWidth = wrapper.parentElement.clientWidth - 32; // 2rem padding
+            if (containerWidth < targetWidth) {
+                const scale = containerWidth / targetWidth;
+                cert.style.transform = 'scale(' + scale + ')';
+                wrapper.style.height = (targetHeight * scale) + 'px';
+            } else {
+                cert.style.transform = 'scale(1)';
+                wrapper.style.height = targetHeight + 'px';
+            }
+        }
+        window.addEventListener('resize', resizeCert);
+        window.addEventListener('load', resizeCert);
+
+        // 2. Lógica de validación
+        const hash = window.location.hash.substring(1); 
+        const statusCard = document.getElementById('statusCard');
+        const errorOverlay = document.getElementById('errorOverlay');
+
+        if (hash) {
+            try {
+                // Decodificar Base64 seguro para UTF-8 (tildes, eñes)
+                const datosPuros = decodeURIComponent(escape(window.atob(hash)));
+                const [apellidos, nombres, curso, duracion, codigo, lugar, fecha] = datosPuros.split('|');
+
+                // Validar que tengamos los datos correctos
+                if(!apellidos || !curso || !codigo) throw new Error("Faltan datos");
+
+                // Popular HTML
+                document.getElementById('val-apellidos').innerText = apellidos;
+                document.getElementById('val-nombres').innerText = nombres;
+                document.getElementById('val-curso').innerText = curso;
+                document.getElementById('val-duracion').innerText = duracion + " horas académicas";
+                document.getElementById('val-codigo').innerText = codigo;
+                document.getElementById('val-lugar').innerText = lugar;
+                
+                const formatDate = (dateStr) => {
+                    if (!dateStr) return "";
+                    const parts = dateStr.split('-');
+                    // Si viene como YYYY-MM-DD lo pasamos a DD/MM/YYYY, o lo dejamos igual
+                    if(parts.length === 3 && parts[0].length === 4) {
+                        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    }
+                    return dateStr;
+                };
+                
+                document.getElementById('val-fecha').innerText = formatDate(fecha);
+
+                // Mostrar éxito
+                statusCard.className = "status-card valid";
+                statusCard.innerHTML = `
+                    <div style="display:flex; align-items:center; justify-content:center; color:#10b981; margin-bottom:0.5rem;">
+                        <span class="material-symbols-outlined" style="font-size:2rem; margin-right:8px;">verified</span>
+                        <h2 style="margin:0; font-size:1.5rem;">Certificado Válido</h2>
+                    </div>
+                    <p style="margin:0; color:#4a5568;">La información en pantalla es oficial y auténtica.</p>
+                `;
+
+            } catch (e) {
+                // Mostrar error visual en el certificado
+                errorOverlay.style.display = "flex";
+                
+                statusCard.className = "status-card invalid";
+                statusCard.innerHTML = `
+                    <div style="display:flex; align-items:center; justify-content:center; color:#ef4444; margin-bottom:0.5rem;">
+                        <span class="material-symbols-outlined" style="font-size:2rem; margin-right:8px;">error</span>
+                        <h2 style="margin:0; font-size:1.5rem;">QR Inválido</h2>
+                    </div>
+                    <p style="margin:0; color:#4a5568;">El código está corrupto o ha sido alterado.</p>
+                `;
+            }
+        } else {
+            // No hay Hash
+            statusCard.className = "status-card";
+            statusCard.style.display = "block";
+            statusCard.innerHTML = `
+                <div style="display:flex; align-items:center; justify-content:center; color:#718096; margin-bottom:0.5rem;">
+                    <span class="material-symbols-outlined" style="font-size:2rem; margin-right:8px;">qr_code_scanner</span>
+                    <h2 style="margin:0; font-size:1.2rem;">Esperando escaneo</h2>
+                </div>
+                <p style="margin:0; color:#4a5568;">Por favor, escanea un código QR válido de un certificado.</p>
+            `;
+        }
+    </script>
+</body>
+</html>
