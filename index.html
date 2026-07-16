@@ -7,6 +7,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         :root {
             --blue-dark: #002b7f;
             --blue-bright: #0044cc;
@@ -125,27 +129,28 @@
 
         .title {
             color: var(--blue-dark);
-            font-size: 3.5rem;
+            font-size: 3.2rem;
             font-weight: 800;
-            letter-spacing: 2px;
-            margin: 0 0 10px 0;
+            letter-spacing: 4px;
+            margin: 0 0 5px 0;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
         }
 
         .subtitle {
-            color: var(--blue-dark);
-            font-size: 1.2rem;
+            color: var(--text-muted);
+            font-size: 1.1rem;
             font-weight: 600;
-            letter-spacing: 4px;
-            margin: 0 0 15px 0;
+            letter-spacing: 5px;
+            margin: 0 0 20px 0;
         }
 
         .apellidos {
             color: var(--blue-dark);
             font-family: 'Playfair Display', serif;
             font-size: 2.2rem;
-            font-weight: 700;
+            font-weight: 800;
             margin: 0;
+            line-height: 1.1;
             text-transform: uppercase;
         }
 
@@ -154,30 +159,36 @@
             font-family: 'Playfair Display', serif;
             font-size: 2rem;
             font-weight: 600;
-            margin: 5px 0 40px 0;
+            margin: 5px 0 35px 0;
+            line-height: 1.1;
         }
 
         .curso {
             color: var(--blue-dark);
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 800;
-            line-height: 1.4;
+            line-height: 1.5;
             text-transform: uppercase;
-            max-width: 90%;
-            margin-bottom: 40px;
+            border-top: 2px solid var(--gold);
+            border-bottom: 2px solid var(--gold);
+            padding: 15px 0;
+            margin-bottom: 30px;
         }
 
         .meta {
-            font-size: 1rem;
-            color: var(--text-dark);
-            line-height: 1.8;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.6;
             margin-top: auto;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            display: grid;
+            gap: 8px;
         }
         .meta p {
-            margin: 5px 0;
+            margin: 0;
         }
         .meta strong {
+            color: var(--text-dark);
             font-weight: 700;
         }
 
