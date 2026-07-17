@@ -235,6 +235,33 @@
             transform: rotate(-15deg);
             text-transform: uppercase;
         }
+        
+        /* Tabla Profesional de Datos */
+        .data-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .data-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding-bottom: 8px;
+        }
+        .data-label {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .data-value {
+            font-size: 1.1rem;
+            color: var(--blue-dark);
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
@@ -255,16 +282,8 @@
 
             <div class="cert-content">
                 <h1 class="title">CERTIFICADO</h1>
-                <p class="subtitle">OTORGADO A:</p>
-                <div class="apellidos" id="val-apellidos">-------------</div>
-                <div class="nombres" id="val-nombres">-------------</div>
-
-                <div class="curso" id="val-curso">------------------------------------</div>
-
-                <div class="meta">
-                    <p>Con una duración de <strong id="val-duracion">--- horas académicas</strong>.</p>
-                    <p>Emitido en <span id="val-lugar">---</span>, el <span id="val-fecha">---</span></p>
-                    <p>Código de certificado: <strong id="val-codigo">---</strong></p>
+                <div id="val-lista" style="text-align: left; width: 100%;">
+                    <div style="color: var(--blue-dark); font-weight: 600; font-size: 1.2rem; margin-top: 30px;">Cargando datos...</div>
                 </div>
             </div>
 
@@ -310,30 +329,62 @@
             try {
                 // Decodificar Base64 seguro para UTF-8 (tildes, eñes)
                 const datosPuros = decodeURIComponent(escape(window.atob(hash)));
-                const [apellidos, nombres, curso, duracion, codigo, lugar, fecha] = datosPuros.split('|');
 
-                // Validar que tengamos los datos correctos
-                if(!apellidos || !curso || !codigo) throw new Error("Faltan datos");
+                // Validar que tengamos los datos correctos verificando alguna palabra clave
+                if(!datosPuros || !datosPuros.includes("Organismo")) throw new Error("Faltan datos");
 
-                // Popular HTML
-                document.getElementById('val-apellidos').innerText = apellidos;
-                document.getElementById('val-nombres').innerText = nombres;
-                document.getElementById('val-curso').innerText = curso;
-                document.getElementById('val-duracion').innerText = duracion + " horas académicas";
-                document.getElementById('val-codigo').innerText = codigo;
-                document.getElementById('val-lugar').innerText = lugar;
+                // Formateo Profesional y Cálculo Dinámico
+                const lineas = datosPuros.split('\n');
                 
-                const formatDate = (dateStr) => {
-                    if (!dateStr) return "";
-                    const parts = dateStr.split('-');
-                    // Si viene como YYYY-MM-DD lo pasamos a DD/MM/YYYY, o lo dejamos igual
-                    if(parts.length === 3 && parts[0].length === 4) {
-                        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                // Buscar fecha de vencimiento para el recálculo dinámico
+                let fechaVenc = null;
+                lineas.forEach(linea => {
+                    const partes = linea.split(':');
+                    if (partes[0].trim() === 'Fecha de Vencimiento') {
+                        const valor = partes.slice(1).join(':').trim();
+                        const [d, m, y] = valor.split('/');
+                        fechaVenc = new Date(`${y}-${m}-${d}T12:00:00Z`);
                     }
-                    return dateStr;
-                };
-                
-                document.getElementById('val-fecha').innerText = formatDate(fecha);
+                });
+
+                const hoy = new Date();
+                let diasDinámicos = 0;
+                let estadoDinámico = 'VENCIDO';
+                if (fechaVenc) {
+                    const diff = fechaVenc - hoy;
+                    diasDinámicos = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                    estadoDinámico = diasDinámicos > 0 ? "ACTIVO" : "VENCIDO";
+                }
+
+                let htmlFormat = '<div class="data-grid">';
+                lineas.forEach(linea => {
+                    if(linea.trim() === '') return;
+                    const partes = linea.split(':');
+                    const clave = partes.shift().trim();
+                    let valor = partes.join(':').trim();
+
+                    // Sobrescribir con el cálculo en tiempo real
+                    if(clave === 'Dias por Vencer') valor = diasDinámicos;
+                    if(clave === 'Estado') valor = estadoDinámico;
+                    
+                    let valorHtml = valor;
+                    if(clave === 'Estado') {
+                        const bg = valor === 'ACTIVO' ? '#ecfdf5' : '#fef2f2';
+                        const col = valor === 'ACTIVO' ? '#10b981' : '#ef4444';
+                        valorHtml = `<span style="background: ${bg}; color: ${col}; padding: 4px 12px; border-radius: 20px; font-size: 0.95rem; letter-spacing: 1px;">${valor}</span>`;
+                    }
+                    
+                    htmlFormat += `
+                        <div class="data-row">
+                            <div class="data-label">${clave}</div>
+                            <div class="data-value">${valorHtml}</div>
+                        </div>
+                    `;
+                });
+                htmlFormat += '</div>';
+
+                // Popular HTML con el nuevo diseño
+                document.getElementById('val-lista').innerHTML = htmlFormat;
 
                 // Mostrar éxito
                 statusCard.className = "status-card valid";
