@@ -33,7 +33,7 @@
         /* Envoltorio Responsive */
         .cert-wrapper {
             width: 100%;
-            max-width: 900px; /* Ancho real del certificado */
+            max-width: 900px;
             position: relative;
             display: flex;
             justify-content: center;
@@ -41,7 +41,7 @@
             transform-origin: top center;
         }
 
-        /* El Certificado Físico (Tamaño fijo, se escalará con JS) */
+        /* El Certificado Físico */
         .certificate {
             width: 900px;
             height: 650px;
@@ -105,7 +105,7 @@
             z-index: 5;
         }
 
-        /* Logo Falso (Simulando el de la imagen) */
+        /* Logo Falso */
         .cert-logo {
             position: absolute;
             top: 60px;
@@ -122,7 +122,7 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 20;
-            padding: 70px 60px 60px 400px; /* Margen izquierdo grande para evitar el triángulo */
+            padding: 70px 60px 60px 400px;
             display: flex;
             flex-direction: column;
         }
@@ -136,63 +136,7 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
         }
 
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            font-weight: 600;
-            letter-spacing: 5px;
-            margin: 0 0 20px 0;
-        }
-
-        .apellidos {
-            color: var(--blue-dark);
-            font-family: 'Playfair Display', serif;
-            font-size: 2.2rem;
-            font-weight: 800;
-            margin: 0;
-            line-height: 1.1;
-            text-transform: uppercase;
-        }
-
-        .nombres {
-            color: var(--blue-dark);
-            font-family: 'Playfair Display', serif;
-            font-size: 2rem;
-            font-weight: 600;
-            margin: 5px 0 35px 0;
-            line-height: 1.1;
-        }
-
-        .curso {
-            color: var(--blue-dark);
-            font-size: 1.3rem;
-            font-weight: 800;
-            line-height: 1.5;
-            text-transform: uppercase;
-            border-top: 2px solid var(--gold);
-            border-bottom: 2px solid var(--gold);
-            padding: 15px 0;
-            margin-bottom: 30px;
-        }
-
-        .meta {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            line-height: 1.6;
-            margin-top: auto;
-            margin-bottom: 20px;
-            display: grid;
-            gap: 8px;
-        }
-        .meta p {
-            margin: 0;
-        }
-        .meta strong {
-            color: var(--text-dark);
-            font-weight: 700;
-        }
-
-        /* Tarjeta de Estado Flotante (Debajo del certificado) */
+        /* Tarjeta de Estado Flotante */
         .status-card {
             width: 100%;
             max-width: 600px;
@@ -201,7 +145,7 @@
             padding: 1.5rem;
             text-align: center;
             box-shadow: 0 10px 15px rgba(0,0,0,0.05);
-            display: none; /* Se activa con JS */
+            display: none;
             margin-top: 1rem;
         }
         .status-card.valid {
@@ -221,7 +165,6 @@
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.85);
             z-index: 100;
-            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -266,18 +209,14 @@
 </head>
 <body>
 
-    <!-- Contenedor del Certificado (Se escala automáticamente) -->
     <div class="cert-wrapper" id="certWrapper">
         <div class="certificate" id="certificate">
-            <!-- Formas de Fondo -->
             <div class="bg-shape-2"></div>
             <div class="bg-shape-1"></div>
-            
             <div class="shape-gold-wide"></div>
             <div class="shape-blue-dark"></div>
             <div class="shape-blue-light"></div>
             <div class="shape-blue-accent"></div>
-            
             <img class="cert-logo" src="logo.png" alt="Europe Certifications Logo">
 
             <div class="cert-content">
@@ -293,21 +232,16 @@
         </div>
     </div>
 
-    <!-- Panel de Estado Real -->
-    <div class="status-card" id="statusCard">
-        <!-- Contenido dinámico -->
-    </div>
+    <div class="status-card" id="statusCard"></div>
 
     <script>
-        // 1. Escalar el certificado para que quepa en móviles sin romperse
         function resizeCert() {
             const wrapper = document.getElementById('certWrapper');
             const cert = document.getElementById('certificate');
             const targetWidth = 900;
             const targetHeight = 650;
+            const containerWidth = wrapper.parentElement.clientWidth - 32;
             
-            // Si la pantalla es más pequeña que el certificado, lo achicamos con scale()
-            const containerWidth = wrapper.parentElement.clientWidth - 32; // 2rem padding
             if (containerWidth < targetWidth) {
                 const scale = containerWidth / targetWidth;
                 cert.style.transform = 'scale(' + scale + ')';
@@ -320,73 +254,80 @@
         window.addEventListener('resize', resizeCert);
         window.addEventListener('load', resizeCert);
 
-        // 2. Lógica de validación
         const hash = window.location.hash.substring(1); 
         const statusCard = document.getElementById('statusCard');
         const errorOverlay = document.getElementById('errorOverlay');
 
         if (hash) {
             try {
-                // Decodificar Base64 seguro para UTF-8 (tildes, eñes)
-                const datosPuros = decodeURIComponent(escape(window.atob(hash)));
-
-                // Validar que tengamos los datos correctos verificando alguna palabra clave
-                if(!datosPuros || !datosPuros.includes("Organismo")) throw new Error("Faltan datos");
-
-                // Formateo Profesional y Cálculo Dinámico
-                const lineas = datosPuros.split('\n');
+                const b64 = decodeURIComponent(hash);
+                const datosPuros = decodeURIComponent(escape(window.atob(b64)));
+                const partes = datosPuros.split('|');
                 
-                // Buscar fecha de vencimiento para el recálculo dinámico
-                let fechaVenc = null;
-                lineas.forEach(linea => {
-                    const partes = linea.split(':');
-                    if (partes[0].trim() === 'Fecha de Vencimiento') {
-                        const valor = partes.slice(1).join(':').trim();
-                        const [d, m, y] = valor.split('/');
-                        fechaVenc = new Date(`${y}-${m}-${d}T12:00:00Z`);
-                    }
-                });
+                if (partes.length < 10) throw new Error("Faltan datos");
 
+                const [org_cert, org_acred, num_cert, empresa, norma, curso, fechaRegQR, fechaVenQR, duracion, codigo] = partes;
+
+                const [d, m, y] = fechaVenQR.split('/');
+                const fechaVenc = new Date(`${y}-${m}-${d}T12:00:00Z`);
                 const hoy = new Date();
-                let diasDinámicos = 0;
-                let estadoDinámico = 'VENCIDO';
-                if (fechaVenc) {
-                    const diff = fechaVenc - hoy;
-                    diasDinámicos = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                    estadoDinámico = diasDinámicos > 0 ? "ACTIVO" : "VENCIDO";
-                }
+                const diff = fechaVenc - hoy;
+                const diasDinámicos = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                const estadoDinámico = diasDinámicos > 0 ? "ACTIVO" : "VENCIDO";
+
+                const labels = [
+                    "Organismo de Certificación",
+                    "Organismo de Acreditación",
+                    "Número de Certificado",
+                    "Nombre de la Empresa",
+                    "Norma de Certificación",
+                    "Nombre del Curso",
+                    "Fecha de Registro",
+                    "Fecha de Vencimiento",
+                    "Duración - HORAS",
+                    "Certificado",
+                    "Dias por Vencer",
+                    "Estado"
+                ];
+                
+                const values = [
+                    org_cert,
+                    org_acred,
+                    num_cert,
+                    empresa,
+                    norma,
+                    curso,
+                    fechaRegQR,
+                    fechaVenQR,
+                    duracion + " HORAS ACADÉMICAS",
+                    codigo,
+                    diasDinámicos,
+                    estadoDinámico
+                ];
 
                 let htmlFormat = '<div class="data-grid">';
-                lineas.forEach(linea => {
-                    if(linea.trim() === '') return;
-                    const partes = linea.split(':');
-                    const clave = partes.shift().trim();
-                    let valor = partes.join(':').trim();
-
-                    // Sobrescribir con el cálculo en tiempo real
-                    if(clave === 'Dias por Vencer') valor = diasDinámicos;
-                    if(clave === 'Estado') valor = estadoDinámico;
-                    
+                for(let i = 0; i < labels.length; i++) {
+                    let clave = labels[i];
+                    let valor = values[i];
                     let valorHtml = valor;
-                    if(clave === 'Estado') {
+
+                    if (clave === 'Estado') {
                         const bg = valor === 'ACTIVO' ? '#ecfdf5' : '#fef2f2';
                         const col = valor === 'ACTIVO' ? '#10b981' : '#ef4444';
                         valorHtml = `<span style="background: ${bg}; color: ${col}; padding: 4px 12px; border-radius: 20px; font-size: 0.95rem; letter-spacing: 1px;">${valor}</span>`;
                     }
-                    
+
                     htmlFormat += `
                         <div class="data-row">
                             <div class="data-label">${clave}</div>
                             <div class="data-value">${valorHtml}</div>
                         </div>
                     `;
-                });
+                }
                 htmlFormat += '</div>';
 
-                // Popular HTML con el nuevo diseño
                 document.getElementById('val-lista').innerHTML = htmlFormat;
 
-                // Mostrar éxito
                 statusCard.className = "status-card valid";
                 statusCard.innerHTML = `
                     <div style="display:flex; align-items:center; justify-content:center; color:#10b981; margin-bottom:0.5rem;">
@@ -397,7 +338,6 @@
                 `;
 
             } catch (e) {
-                // Mostrar error visual en el certificado
                 errorOverlay.style.display = "flex";
                 
                 statusCard.className = "status-card invalid";
@@ -407,10 +347,10 @@
                         <h2 style="margin:0; font-size:1.5rem;">QR Inválido</h2>
                     </div>
                     <p style="margin:0; color:#4a5568;">El código está corrupto o ha sido alterado.</p>
+                    <p style="margin-top:0.5rem; font-size:0.8rem; color:#e53e3e;">[ERROR TÉCNICO: ${e.message}]</p>
                 `;
             }
         } else {
-            // No hay Hash
             statusCard.className = "status-card";
             statusCard.style.display = "block";
             statusCard.innerHTML = `
